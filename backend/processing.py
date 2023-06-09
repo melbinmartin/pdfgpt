@@ -27,57 +27,57 @@ print(devices)
 
 
 
-# Validates user signup, checks existing usernames
-def signup_user(username, password):
-    conn = sqlite3.connect("pagetalk.db")
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM Authentication WHERE Username=?', (username,))
-    result = cur.fetchone()
-
-    if result is None:
-        cur.execute('INSERT INTO Authentication VALUES (?, ?)', (username, password))
-        conn.commit()
-        conn.close()
-        return True
-    else:
-        conn.close()
-        return False
-
-# Validates user login, checks match between username and password
-def validate_user(username, password):
-    conn = sqlite3.connect("pagetalk.db")
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM Authentication WHERE Username=? AND Password=?', (username, password))
-    if cur.fetchone() is None:
-        conn.close()
-        return False
-    else:
-        conn.close()
-        return True
-
-
-
-# from daal4py.oneapi import sycl_context
-
-# def get_reply(query, conversation, username):
+# # Validates user signup, checks existing usernames
+# def signup_user(username, password):
 #     conn = sqlite3.connect("pagetalk.db")
 #     cur = conn.cursor()
-#     cur.execute('SELECT * FROM Chats WHERE Username=? AND Title=?', (username, conversation))
-#     results = cur.fetchone()
-#     chain = pickle.loads(results[3])
-#     db = pickle.loads(results[2])
+#     cur.execute('SELECT * FROM Authentication WHERE Username=?', (username,))
+#     result = cur.fetchone()
 
-#     docs = db.similarity_search(query)
+#     if result is None:
+#         cur.execute('INSERT INTO Authentication VALUES (?, ?)', (username, password))
+#         conn.commit()
+#         conn.close()
+#         return True
+#     else:
+#         conn.close()
+#         return False
 
-#     with sycl_context("gpu"):
-#         reply = chain.run(input_documents=docs, question=query)
+# # Validates user login, checks match between username and password
+# def validate_user(username, password):
+#     conn = sqlite3.connect("pagetalk.db")
+#     cur = conn.cursor()
+#     cur.execute('SELECT * FROM Authentication WHERE Username=? AND Password=?', (username, password))
+#     if cur.fetchone() is None:
+#         conn.close()
+#         return False
+#     else:
+#         conn.close()
+#         return True
 
-#     timestamp = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-#     cur.execute('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)', (timestamp, query, conversation, username, "user"))
-#     cur.execute('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)', (timestamp + 1, reply, conversation, username, "bot"))
-#     conn.commit()
-#     conn.close()
-#     return reply
+
+
+from daal4py.oneapi import sycl_context
+
+def get_reply(query, conversation, username):
+    conn = sqlite3.connect("pagetalk.db")
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Chats WHERE Username=? AND Title=?', (username, conversation))
+    results = cur.fetchone()
+    chain = pickle.loads(results[3])
+    db = pickle.loads(results[2])
+
+    docs = db.similarity_search(query)
+
+    with sycl_context("gpu"):
+        reply = chain.run(input_documents=docs, question=query)
+
+    timestamp = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    cur.execute('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)', (timestamp, query, conversation, username, "user"))
+    cur.execute('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)', (timestamp + 1, reply, conversation, username, "bot"))
+    conn.commit()
+    conn.close()
+    return reply
 
 #Runs query through the similarity search and question answering chain
 def get_reply(query, conversation, username):
